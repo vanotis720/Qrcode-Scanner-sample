@@ -1,5 +1,7 @@
 # Qrcode-Scanner-sample
 
+![App Screenshot](/screenshot.png)
+
 A mobile application that can scan QR codes built with React Native and Expo.
 
 ## 📱 Features
@@ -37,7 +39,7 @@ A mobile application that can scan QR codes built with React Native and Expo.
 ## 📹 Tutorial
 
 For a complete step-by-step explanation, watch the full video tutorial on YouTube:
-[Watch the QR Code Scanner Tutorial](https://youtube.com/vanotis720)
+[Watch the QR Code Scanner Tutorial](https://youtu.be/DPzXRNtMvmE)
 
 In this tutorial, I show you how to create a mobile application capable of scanning QR codes using React Native with Expo. No complex configuration needed - everything is done step by step, from scratch.
 
