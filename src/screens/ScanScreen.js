@@ -7,7 +7,8 @@ import {
     TouchableOpacity,
     Platform,
     Linking,
-    StatusBar as RNStatusBar
+    StatusBar as RNStatusBar,
+    ActivityIndicator
 } from 'react-native';
 import { useCameraPermissions, CameraView } from 'expo-camera';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
@@ -21,16 +22,49 @@ const ScanScreen = ({ navigation }) => {
     const isPermissionGranted = permission?.granted;
     const [dataScanned, setDataScanned] = useState(null);
     const [flashOn, setFlashOn] = useState(false);
+    const [isUrl, setIsUrl] = useState(false);
+    const [opening, setOpening] = useState(false);
+    const [error, setError] = useState(null);
 
     const qrcodeData = (data) => {
         console.log('Scanned data:', data);
-        if (data.startsWith('http') || data.startsWith('https')) {
-            Linking.openURL(data).catch(err => console.error('Error opening URL:', err));
+        setDataScanned(data);
+        if (data.startsWith('http') || data.startsWith('https') || data.startsWith('www.')) {
+            setDataScanned(data);
+            setIsUrl(true);
         }
         else {
             setDataScanned(data);
-            console.log('QR Code Data:', data);
         }
+    }
+
+    const openLink = async (url) => {
+        setOpening(true);
+        setError(null);
+        try {
+            if (url.startsWith('www.')) {
+                url = `https://${url}`;
+            }
+
+            const supported = await Linking.canOpenURL(url);
+            if (supported) {
+                await Linking.openURL(url);
+            } else {
+                setError("Le lien n'est pas valide ou ne peut pas être ouvert.");
+            }
+        } catch (e) {
+            setError("Une erreur s'est produite lors de la redirection vers le lien");
+        } finally {
+            setOpening(false);
+        }
+    };
+
+    if (permission === null) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+                <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+        );
     }
 
     if (!isPermissionGranted) {
@@ -61,34 +95,54 @@ const ScanScreen = ({ navigation }) => {
 
     if (dataScanned) {
         return (
-            <View style={styles.resultContainer}>
-                <StatusBar style="auto" />
-                <View style={styles.resultHeader}>
-                    <Text style={styles.resultTitle}>QR Code Scanné</Text>
-                    <MaterialCommunityIcons name="check-circle" size={64} color={colors.success} />
-                </View>
-
-                <View style={styles.resultCard}>
-                    <Text style={styles.resultLabel}>Résultat:</Text>
-                    <Text style={styles.resultData}>{dataScanned}</Text>
-
-                    {dataScanned.startsWith('http') || dataScanned.startsWith('https') ? (
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={() => Linking.openURL(dataScanned)}
+            <View style={{ flex: 1, backgroundColor: colors.background }}>
+                <View style={styles.resultModernWrapper}>
+                    <View style={styles.resultModernIconCircle}>
+                        <MaterialCommunityIcons name="check-circle" size={56} color={colors.success} />
+                    </View>
+                    <Text style={styles.resultModernTitle}>Code scanné !</Text>
+                    <View style={styles.resultModernCard}>
+                        <Text style={styles.resultModernLabel}>Résultat</Text>
+                        <View style={styles.resultModernDivider} />
+                        <Text
+                            style={styles.resultModernData}
+                            selectable
+                            numberOfLines={10}
                         >
-                            <Ionicons name="open-outline" size={20} color={colors.inverseText} />
-                            <Text style={styles.actionButtonText}>Ouvrir le lien</Text>
-                        </TouchableOpacity>
-                    ) : null}
+                            {dataScanned}
+                        </Text>
+                        {isUrl ? (
+                            <>
+                                {error ? (
+                                    <Text style={styles.resultModernError}>{error}</Text>
+                                ) : null}
+                                <TouchableOpacity
+                                    style={styles.resultModernActionButton}
+                                    onPress={() => openLink(dataScanned)}
+                                    disabled={opening}
+                                >
+                                    {opening ? (
+                                        <ActivityIndicator color={colors.inverseText} size="small" style={{ marginRight: 8 }} />
+                                    ) : (
+                                        <Ionicons name="open-outline" size={18} color={colors.inverseText} />
+                                    )}
+                                    <Text style={styles.resultModernActionButtonText}>
+                                        {opening ? "Ouverture..." : "Ouvrir le lien"}
+                                    </Text>
+                                </TouchableOpacity>
+                            </>
+                        ) : null}
+                    </View>
                 </View>
-
                 <TouchableOpacity
-                    onPress={() => setDataScanned(null)}
-                    style={styles.scanAgainButton}
+                    onPress={() => {
+                        setDataScanned(null)
+                        setIsUrl(false)
+                    }}
+                    style={styles.resultModernScanAgainButton}
+                    activeOpacity={0.85}
                 >
-                    <MaterialCommunityIcons name="qrcode-scan" size={24} color={colors.inverseText} />
-                    <Text style={styles.scanAgainButtonText}>Scanner à nouveau</Text>
+                    <MaterialCommunityIcons name="qrcode-scan" size={30} color={colors.inverseText} />
                 </TouchableOpacity>
             </View>
         );
@@ -108,10 +162,9 @@ const ScanScreen = ({ navigation }) => {
             />
             <Overlay />
 
-            {/* Header Bar */}
-            <SafeAreaView style={styles.headerContainer}>
+            <View style={styles.headerContainer}>
                 <View style={styles.header}>
-                    <TouchableOpacity style={styles.headerButton}>
+                    <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Historique')}>
                         <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Scanner QR Code</Text>
@@ -126,9 +179,8 @@ const ScanScreen = ({ navigation }) => {
                         />
                     </TouchableOpacity>
                 </View>
-            </SafeAreaView>
+            </View>
 
-            {/* Instructions */}
             <View style={styles.scanInstructionsContainer}>
                 <View style={styles.scanInstructionsBox}>
                     <MaterialCommunityIcons name="qrcode-scan" size={20} color="white" style={styles.instructionIcon} />
@@ -260,70 +312,86 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
-    resultContainer: {
+    resultModernWrapper: {
         flex: 1,
-        backgroundColor: colors.primary,
-        padding: 20,
-    },
-    resultHeader: {
         alignItems: 'center',
-        marginTop: 40,
-        marginBottom: 30,
-    },
-    resultTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: colors.inverseText,
-        marginBottom: 20,
-    },
-    resultCard: {
+        padding: 24,
         backgroundColor: colors.background,
+    },
+    resultModernIconCircle: {
+        backgroundColor: "#E8F8EF",
+        borderRadius: 40,
+        padding: 14,
+        marginBottom: 18,
+    },
+    resultModernTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: colors.text,
+        marginBottom: 22,
+        textAlign: 'center',
+    },
+    resultModernCard: {
+        width: '100%',
+        backgroundColor: colors.surfaceLight,
         borderRadius: 16,
         padding: 20,
-        marginBottom: 20,
         ...shadows.card,
+        marginBottom: 16,
     },
-    resultLabel: {
-        fontSize: 16,
+    resultModernLabel: {
+        fontSize: 13,
         color: colors.lightText,
-        marginBottom: 8,
+        fontWeight: "600",
+        marginBottom: 6,
+        textTransform: "uppercase",
+        letterSpacing: 1,
     },
-    resultData: {
-        fontSize: 18,
+    resultModernDivider: {
+        height: 1,
+        backgroundColor: "#ECECEC",
+        marginVertical: 8,
+        borderRadius: 1,
+    },
+    resultModernData: {
+        fontSize: 16,
         color: colors.text,
         fontWeight: '500',
-        marginBottom: 20,
+        marginBottom: 18,
+        lineHeight: 22,
     },
-    scanAgainButton: {
-        backgroundColor: colors.accent,
+    resultModernActionButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 30,
-        ...shadows.button,
-    },
-    scanAgainButtonText: {
-        color: colors.inverseText,
-        fontSize: 16,
-        fontWeight: '600',
-        marginLeft: 8,
-    },
-    actionButton: {
+        alignSelf: 'flex-end',
         backgroundColor: colors.actionButton,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 18,
+        borderRadius: 22,
+        marginTop: 4,
     },
-    actionButtonText: {
+    resultModernActionButtonText: {
         color: colors.inverseText,
-        fontSize: 16,
-        fontWeight: '500',
-        marginLeft: 8,
+        fontSize: 15,
+        fontWeight: '600',
+        marginLeft: 6,
+    },
+    resultModernScanAgainButton: {
+        position: 'absolute',
+        bottom: 40,
+        right: 20,
+        alignSelf: 'flex-end',
+        backgroundColor: colors.accent,
+        padding: 18,
+        borderRadius: 20,
+        alignItems: 'center',
+        ...shadows.card,
+    },
+    resultModernError: {
+        color: colors.error,
+        fontSize: 14,
+        marginBottom: 8,
+        fontWeight: "600",
     },
 });
 
