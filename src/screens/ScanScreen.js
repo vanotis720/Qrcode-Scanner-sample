@@ -16,6 +16,7 @@ import { Overlay } from "../components/Overlay";
 import colors from "../styles/colors";
 import { shadows } from "../styles/shadows";
 import { StatusBar } from "expo-status-bar";
+import { addToHistory } from "../utils/history";
 
 const ScanScreen = ({ navigation }) => {
     const [permission, requestPermission] = useCameraPermissions();
@@ -29,6 +30,7 @@ const ScanScreen = ({ navigation }) => {
     const qrcodeData = (data) => {
         console.log('Scanned data:', data);
         setDataScanned(data);
+        addToHistory({ value: data });
         if (data.startsWith('http') || data.startsWith('https') || data.startsWith('www.')) {
             setDataScanned(data);
             setIsUrl(true);
@@ -93,61 +95,6 @@ const ScanScreen = ({ navigation }) => {
         );
     }
 
-    if (dataScanned) {
-        return (
-            <View style={{ flex: 1, backgroundColor: colors.background }}>
-                <View style={styles.resultModernWrapper}>
-                    <View style={styles.resultModernIconCircle}>
-                        <MaterialCommunityIcons name="check-circle" size={56} color={colors.success} />
-                    </View>
-                    <Text style={styles.resultModernTitle}>Code scanné !</Text>
-                    <View style={styles.resultModernCard}>
-                        <Text style={styles.resultModernLabel}>Résultat</Text>
-                        <View style={styles.resultModernDivider} />
-                        <Text
-                            style={styles.resultModernData}
-                            selectable
-                            numberOfLines={10}
-                        >
-                            {dataScanned}
-                        </Text>
-                        {isUrl ? (
-                            <>
-                                {error ? (
-                                    <Text style={styles.resultModernError}>{error}</Text>
-                                ) : null}
-                                <TouchableOpacity
-                                    style={styles.resultModernActionButton}
-                                    onPress={() => openLink(dataScanned)}
-                                    disabled={opening}
-                                >
-                                    {opening ? (
-                                        <ActivityIndicator color={colors.inverseText} size="small" style={{ marginRight: 8 }} />
-                                    ) : (
-                                        <Ionicons name="open-outline" size={18} color={colors.inverseText} />
-                                    )}
-                                    <Text style={styles.resultModernActionButtonText}>
-                                        {opening ? "Ouverture..." : "Ouvrir le lien"}
-                                    </Text>
-                                </TouchableOpacity>
-                            </>
-                        ) : null}
-                    </View>
-                </View>
-                <TouchableOpacity
-                    onPress={() => {
-                        setDataScanned(null)
-                        setIsUrl(false)
-                    }}
-                    style={styles.resultModernScanAgainButton}
-                    activeOpacity={0.85}
-                >
-                    <MaterialCommunityIcons name="qrcode-scan" size={30} color={colors.inverseText} />
-                </TouchableOpacity>
-            </View>
-        );
-    }
-
     return (
         <View style={StyleSheet.absoluteFillObject}>
             <CameraView
@@ -155,7 +102,7 @@ const ScanScreen = ({ navigation }) => {
                 facing='back'
                 enableTorch={flashOn}
                 onBarcodeScanned={({ data }) => {
-                    if (data) {
+                    if (data && !dataScanned) {
                         qrcodeData(data);
                     }
                 }}
@@ -189,6 +136,67 @@ const ScanScreen = ({ navigation }) => {
                     </Text>
                 </View>
             </View>
+
+            {/* Show result overlay if scanned */}
+            {dataScanned && (
+                <View style={{
+                    ...StyleSheet.absoluteFillObject,
+                    backgroundColor: 'rgba(255,255,255,0.98)',
+                    zIndex: 20,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}>
+                    <View style={styles.resultModernWrapper}>
+                        <View style={styles.resultModernIconCircle}>
+                            <MaterialCommunityIcons name="check-circle" size={56} color={colors.success} />
+                        </View>
+                        <Text style={styles.resultModernTitle}>Code scanné !</Text>
+                        <View style={styles.resultModernCard}>
+                            <Text style={styles.resultModernLabel}>Résultat</Text>
+                            <View style={styles.resultModernDivider} />
+                            <Text
+                                style={styles.resultModernData}
+                                selectable
+                                numberOfLines={10}
+                            >
+                                {dataScanned}
+                            </Text>
+                            {isUrl ? (
+                                <>
+                                    {error ? (
+                                        <Text style={styles.resultModernError}>{error}</Text>
+                                    ) : null}
+                                    <TouchableOpacity
+                                        style={styles.resultModernActionButton}
+                                        onPress={() => openLink(dataScanned)}
+                                        disabled={opening}
+                                    >
+                                        {opening ? (
+                                            <ActivityIndicator color={colors.inverseText} size="small" style={{ marginRight: 8 }} />
+                                        ) : (
+                                            <Ionicons name="open-outline" size={18} color={colors.inverseText} />
+                                        )}
+                                        <Text style={styles.resultModernActionButtonText}>
+                                            {opening ? "Ouverture..." : "Ouvrir le lien"}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : null}
+                        </View>
+                    </View>
+                    <TouchableOpacity
+                        onPress={() => {
+                            setDataScanned(null);
+                            setIsUrl(false);
+                            setError(null);
+                        }}
+                        style={styles.resultModernScanAgainButton}
+                        activeOpacity={0.85}
+                    >
+                        <MaterialCommunityIcons name="qrcode-scan" size={30} color={colors.inverseText} />
+                    </TouchableOpacity>
+                </View>
+            )}
         </View>
     );
 };
@@ -317,6 +325,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 24,
         backgroundColor: colors.background,
+        width: '100%',
     },
     resultModernIconCircle: {
         backgroundColor: "#E8F8EF",

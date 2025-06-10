@@ -53,9 +53,9 @@ const BottomTabNavigator = () => {
                 headerShown: false,
             }} />
 
-            <Tab.Screen name="Générer" component={GenerateScreen} options={{
+            {/* <Tab.Screen name="Générer" component={GenerateScreen} options={{
                 headerShown: false
-            }} />
+            }} /> */}
 
             <Tab.Screen name="Historique" component={HistoryScreen} options={{
                 headerShown: false
