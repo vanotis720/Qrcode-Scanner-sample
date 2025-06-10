@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { SafeAreaView, StyleSheet, Text, View, TouchableOpacity, Platform, Linking } from 'react-native';
 import { useCameraPermissions, CameraView } from 'expo-camera';
-import { Overlay } from './src/components/Overlay';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Overlay } from "../components/Overlay";
+import colors from "../styles/colors";
+import { shadows } from "../styles/shadows";
 
 const ScanScreen = ({ navigation }) => {
     const [permission, requestPermission] = useCameraPermissions();
@@ -21,12 +24,25 @@ const ScanScreen = ({ navigation }) => {
 
     if (!isPermissionGranted) {
         return (
-            <SafeAreaView style={styles.container}>
-                <TouchableOpacity onPress={requestPermission} style={styles.button}>
-                    <Text style={styles.buttonText}>
-                        Autoriser l'accès à la caméra
+            <SafeAreaView style={styles.permissionContainer}>
+                <View style={styles.permissionCard}>
+                    <View style={styles.iconContainer}>
+                        <MaterialCommunityIcons name="qrcode-scan" size={80} color={colors.primary} />
+                    </View>
+                    <Text style={styles.permissionTitle}>Accès caméra requis</Text>
+                    <Text style={styles.permissionDescription}>
+                        Pour scanner des QR codes, l'application a besoin d'accéder à votre caméra.
                     </Text>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={requestPermission}
+                        style={styles.permissionButton}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.permissionButtonText}>
+                            Autoriser l'accès
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </SafeAreaView>
         );
     }
@@ -97,6 +113,58 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 16,
         borderRadius: 20,
+    },
+    permissionContainer: {
+        flex: 1,
+        backgroundColor: colors.background,
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    permissionCard: {
+        backgroundColor: colors.background,
+        borderRadius: 16,
+        padding: 24,
+        width: '100%',
+        maxWidth: 400,
+        alignItems: 'center',
+        shadowColor: colors.text,
+    },
+    iconContainer: {
+        backgroundColor: colors.surfaceLight,
+        borderRadius: 60,
+        padding: 20,
+        marginBottom: 24,
+        ...shadows.card,
+    },
+    permissionTitle: {
+        fontSize: 22,
+        color: colors.text,
+        fontWeight: 'bold',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    permissionDescription: {
+        fontSize: 16,
+        color: colors.lightText,
+        marginBottom: 24,
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    permissionButton: {
+        backgroundColor: colors.primary,
+        paddingVertical: 14,
+        paddingHorizontal: 32,
+        borderRadius: 50,
+        width: '100%',
+        alignItems: 'center',
+        marginTop: 8,
+        ...shadows.card,
+    },
+    permissionButtonText: {
+        color: colors.inverseText,
+        fontSize: 16,
+        fontWeight: '600',
     },
 });
 

@@ -19,10 +19,10 @@ const BottomTabNavigator = () => {
 
                     switch (route.name) {
                         case 'Scanner':
-                            iconName = 'barcode-scan-outline';
+                            iconName = 'line-scan';
                             break;
                         case 'Générer':
-                            iconName = 'qrcode-scan-outline';
+                            iconName = 'qrcode-plus';
                             break;
                         case 'Historique':
                             iconName = 'history';

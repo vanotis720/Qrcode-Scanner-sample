@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "qrcodescan",
+    "name": "Scan QRCode",
     "slug": "qrcodescan",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -34,9 +34,8 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
-          "recordAudioAndroid": true
+          "cameraPermission": "Autorisez $(PRODUCT_NAME) à accéder à votre appareil photo pour scanner des QR codes",
+          "recordAudioAndroid": false
         }
       ]
     ],
