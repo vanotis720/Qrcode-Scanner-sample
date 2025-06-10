@@ -17,6 +17,7 @@ import colors from "../styles/colors";
 import { shadows } from "../styles/shadows";
 import { StatusBar } from "expo-status-bar";
 import { addToHistory } from "../utils/history";
+import { useIsFocused } from '@react-navigation/native';
 
 const ScanScreen = ({ navigation }) => {
     const [permission, requestPermission] = useCameraPermissions();
@@ -26,6 +27,7 @@ const ScanScreen = ({ navigation }) => {
     const [isUrl, setIsUrl] = useState(false);
     const [opening, setOpening] = useState(false);
     const [error, setError] = useState(null);
+    const isFocused = useIsFocused();
 
     const qrcodeData = (data) => {
         console.log('Scanned data:', data);
@@ -97,16 +99,18 @@ const ScanScreen = ({ navigation }) => {
 
     return (
         <View style={StyleSheet.absoluteFillObject}>
-            <CameraView
-                style={StyleSheet.absoluteFillObject}
-                facing='back'
-                enableTorch={flashOn}
-                onBarcodeScanned={({ data }) => {
-                    if (data && !dataScanned) {
-                        qrcodeData(data);
-                    }
-                }}
-            />
+            {isFocused && (
+                <CameraView
+                    style={StyleSheet.absoluteFillObject}
+                    facing='back'
+                    enableTorch={flashOn}
+                    onBarcodeScanned={({ data }) => {
+                        if (data && !dataScanned) {
+                            qrcodeData(data);
+                        }
+                    }}
+                />
+            )}
             <Overlay />
 
             <View style={styles.headerContainer}>
